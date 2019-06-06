@@ -155,4 +155,4 @@ def show_webcam(mirror=False, notes_num=2):
 
 
 if __name__ == '__main__':
-    show_webcam(mirror=True)
+    show_webcam(mirror=True, notes_num=4)

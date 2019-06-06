@@ -21,7 +21,7 @@ def frequency(pitch):
     return notes[pitch.lower()]
 
 
-def note(freq, dur, amp=1, sample_rate=44100):
+def note(freq, dur, amp=1.0, sample_rate=44100):
     t = linspace(0, dur, dur * sample_rate)
     data = sin(2 * pi * freq * t) * amp
     return data.astype(int16)
@@ -33,9 +33,10 @@ def play(freq, dur, channels=None):
 
 def plays(freqs, dur, channels=None):
     rate = 44100
-    tone = note(freqs[0], dur, amp=10000, sample_rate=rate)
+    amp = 10000 / len(freqs)
+    tone = note(freqs[0], dur, amp=amp, sample_rate=rate)
     for freq in freqs[1:]:
-        tone += note(freq, dur, amp=10000, sample_rate=rate)
+        tone += note(freq, dur, amp=amp, sample_rate=rate)
     sounddevice.play(tone, samplerate=rate, mapping=channels)
     time.sleep(dur)
 
