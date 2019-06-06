@@ -27,10 +27,16 @@ def note(freq, dur, amp=1, sample_rate=44100):
     return data.astype(int16)
 
 
-def play(freq, dur, channel):
+def play(freq, dur, channels=None):
+    plays([freq], dur, channels)
+
+
+def plays(freqs, dur, channels=None):
     rate = 44100
-    tone = note(freq, dur, amp=10000, sample_rate=rate)
-    sounddevice.play(tone, samplerate=rate, mapping=channel)
+    tone = note(freqs[0], dur, amp=10000, sample_rate=rate)
+    for freq in freqs[1:]:
+        tone += note(freq, dur, amp=10000, sample_rate=rate)
+    sounddevice.play(tone, samplerate=rate, mapping=channels)
     time.sleep(dur)
 
 
@@ -39,15 +45,22 @@ def play2(freq, dur):
     time.sleep(dur)
 
 
-def play_thread(freq, dur, channel):
-    thread = Thread(target=play, args=(freq, dur, channel))
+def play_thread(freq, dur, channels=None):
+    thread = Thread(target=play, args=(freq, dur, channels))
+    thread.start()
+    return thread
+
+
+def plays_thread(freqs, dur, channels=None):
+    thread = Thread(target=plays, args=(freqs, dur, channels))
     thread.start()
     return thread
 
 
 if __name__ == '__main__':
     play2(frequency('a4'), 3)
-    play(frequency('a4'), 3, [1, 2])
+    play(frequency('a4'), 3)
+    plays([frequency('g6'), frequency('a4'), frequency('c2')], 3)
 
     t1 = play_thread(frequency('a2'), 2, 1)
     t2 = play_thread(frequency('c6'), 2, 2)

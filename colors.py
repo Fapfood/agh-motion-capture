@@ -1,14 +1,12 @@
 import cv2
 import numpy as np
 
-from music import play_thread, freq
+from music import plays_thread, freq
 
 
-class Channel:
-    def __init__(self, channel, color=(0, 0, 0)):
-        self.channel = channel
+class Note:
+    def __init__(self, color=(0, 0, 0)):
         self.color = color
-        self.thread = play_thread(440, 0.0, channel)
 
 
 def check_color(image, num):
@@ -106,18 +104,15 @@ def get_pitch(cur, max):
     return pitch
 
 
-def step(img, mode, t, color):
-    return img, mode, t, color
-
-
-def show_webcam(mirror=False, primitive_channels=(1, 2)):
+def show_webcam(mirror=False, notes_num=2):
     mode = 'check'
-    check_counter = 0
+    notes_counter = 0
+    thread = plays_thread([440], 0.0)
 
-    channels = []
-    for ch in primitive_channels:
-        channel = Channel(ch)
-        channels.append(channel)
+    notes = []
+    for _ in range(notes_num):
+        note = Note()
+        notes.append(note)
 
     cam = cv2.VideoCapture(0)
     cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
@@ -129,34 +124,32 @@ def show_webcam(mirror=False, primitive_channels=(1, 2)):
             img = cv2.flip(img, 1)
 
         if mode == 'check':
-            color = check_color(img, check_counter)
-            channels[check_counter].color = color
+            color = check_color(img, notes_counter)
+            notes[notes_counter].color = color
 
         if mode == 'play':
-            for ch in channels:
-                marker_fun, pitch = find_contours(img, ch.color)
-                ch.marker_fun = marker_fun
-                ch.pitch = pitch
+            pitches = []
+            for n in notes:
+                marker_fun, pitch = find_contours(img, n.color)
+                n.marker_fun = marker_fun
+                pitches.append(freq(pitch))
 
             ver = ('a', 'a#', 'b', 'c', 'c#', 'd', 'd#', 'e', 'f', 'f#', 'g', 'g#')
             hor = ('-1', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10')
             add_grid(img, ver=ver, hor=hor, color=(0, 255, 0))
-            for ch in channels:
-                ch.marker_fun(img)
-                print(ch.thread)
-                if not ch.thread.is_alive():
-                    print(ch.thread)
-                    ch.thread.join()
-                    ch.thread = play_thread(freq(ch.pitch), 0.5, ch.channel)
+            for n in notes:
+                n.marker_fun(img)
+            if not thread.is_alive():
+                thread.join()
+                thread = plays_thread(pitches, 0.5)
 
         cv2.imshow('cam', img)
         if cv2.waitKey(1) == 13:  # enter
-            check_counter += 1
-            if check_counter >= len(channels):
+            notes_counter += 1
+            if notes_counter >= len(notes):
                 mode = 'play'
         if cv2.waitKey(1) == 27:  # esc
-            for ch in channels:
-                ch.thread.join()
+            thread.join()
             break
     cv2.destroyAllWindows()
 
