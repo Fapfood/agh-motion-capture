@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import sys
 
 from music import plays_thread, freq
 
@@ -155,4 +156,5 @@ def show_webcam(mirror=False, notes_num=2):
 
 
 if __name__ == '__main__':
-    show_webcam(mirror=True, notes_num=4)
+    notes = int(sys.argv[1]) if len(sys.argv) > 1 else 1
+    show_webcam(mirror=True, notes_num=notes)
